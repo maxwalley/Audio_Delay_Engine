@@ -5,12 +5,18 @@ template<std::floating_point FloatType = float>
 class CircularBuffer
 {
 public:
-    CircularBuffer(int sampleRate, int bufferSize, std::chrono::seconds maxDelayTime)  : samplerate(sampleRate), buffersize(bufferSize)
+    CircularBuffer(std::chrono::seconds maxDelayTime)  : maxDelay(maxDelayTime)
     {
-        buffer.resize(maxDelayTime.count() * samplerate + bufferSize);
+        
     }
 
     ~CircularBuffer() {}
+
+    void prepare(int sampleRate, int bufferSize)
+    {
+        buffersize = bufferSize;
+        buffer.resize(maxDelay.count() * sampleRate + buffersize);
+    }
 
     wrap_around getWriteBuffer()
     {
@@ -39,7 +45,7 @@ public:
     }
 
 private:
-    int samplerate;
+    std::chrono::seconds maxDelay;
     int buffersize;
     std::vector<FloatType> buffer;
     size_t writePos = 0;
