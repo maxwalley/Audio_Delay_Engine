@@ -13,9 +13,9 @@ public:
         buffer = std::make_unique<CircularBuffer<FloatType>>(sampleRate, bufferSize, maxDelay);
     }
 
-    void process(std::span<FloatType> buffer)
+    void process(std::span<FloatType> data)
     {
-        
+
     }
 
 private:

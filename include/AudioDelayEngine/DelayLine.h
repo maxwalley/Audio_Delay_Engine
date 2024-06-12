@@ -1,31 +1,24 @@
-#include <cstdint>
 #include <concepts>
-#include <vector>
 #include <atomic>
+#include "CircularBuffer.h"
 
 template<std::floating_point FloatType = float>
 class DelayLine
 {
 public:
-    DelayLine(float samplingRate, uint16_t delayTimeMs = 100)  : sampleRate(samplingRate), delayTime(delayTimeMs)
+    DelayLine(CircularBuffer& buf, std::chrono::milliseconds delayTime)  : buffer(buf), time(delayTime)
     {
-        refreshBuffer();
+
     }
 
-    ~DelayLine();
-
-    //Not threadsafe
-    void setSampleRate(float newSampleRate)
+    ~DelayLine()
     {
-        sampleRate = newSampleRate;
-        refreshBuffer();
+
     }
 
-    //Not threadsafe
-    void setDelayTime(uint16_t newDelayTimeMs)
+    void process(std::span<FloatType> data)
     {
-        delayTime = newDelayTimeMs;
-        refreshBuffer();
+        
     }
 
     //Threadsafe and realtime safe
@@ -35,44 +28,9 @@ public:
         gain.store(newGain);
     }
 
-    //void process(std::span<FloatType> samples);
-    FloatType process(FloatType sample)
-    {
-        buffer[writePos++] = sample;
-
-        if(writePos >= buffer.size())
-        {
-            writePos = 0;
-        }
-
-        const FloatType ret = buffer[readPos++];
-
-        if(readPos >= buffer.size())
-        {
-            readPos = 0;
-        }
-
-        return ret * gain.load();
-    }
-
 private:
-    void refreshBuffer()
-    {
-        const size_t bufferSizeSamples = (sampleRate / 1000.0f) * delayTime;
-
-        buffer.resize(bufferSizeSamples);
-        std::fill(buffer.begin(), buffer.end(), 0.0f);
-
-        readPos = 1;
-        writePos = 0;
-    }
-
-    std::vector<FloatType> buffer;
-    size_t writePos;
-    size_t readPos;
-
-    float sampleRate;
-    uint16_t delayTime;
+    CircularBuffer<FloatType>& buffer;
+    std::chrono::milliseconds time;
 
     std::atomic<float> gain = 1.0f;
 };
