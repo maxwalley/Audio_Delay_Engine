@@ -2,5 +2,5 @@
 
 TEST(DelayEngineTests, TestTest)
 {
-    EXPECT_EQ(5, 3)
+    EXPECT_EQ(5, 3);
 }
