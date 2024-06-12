@@ -14,7 +14,11 @@ public:
 
     wrap_around getWriteBuffer()
     {
-        return wrap_around(buffer, writePos, buffersize);
+        auto buffer = wrap_around(buffer, writePos, buffersize);
+
+        writePos += buffersize;
+
+        return buffer;
     }
 
     wrap_around getReadBuffer(std::chrono::milliseconds delayLength)
@@ -22,13 +26,13 @@ public:
         size_t delaySamples = (samplerate / 1000.0) * delayLength.count();
         size_t delayPos;
 
-        if(writePos - delaySamples < 0)
+        if(writePos - buffersize - delaySamples < 0)
         {
             delayPos = buffer.size() - delaySamples - writePos;
         }
         else
         {
-            delayPos = writePos - delaySamples;
+            delayPos = writePos - buffersize - delaySamples;
         }
 
         return wrap_around(buffer, delayPos, buffersize);
