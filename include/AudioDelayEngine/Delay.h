@@ -17,12 +17,12 @@ public:
 
     }
 
-    DelayLine<FloatType>& getLine(size_t lineIndex)
+    DelayLine<FloatType>* getLine(size_t lineIndex)
     {
 
     }
 
-    const DelayLine<FloatType>& getLine(size_t lineIndex) const
+    const DelayLine<FloatType>* getLine(size_t lineIndex) const
     {
 
     }
