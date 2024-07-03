@@ -18,12 +18,22 @@ public:
 
     ~Delay() {}
 
+    std::chrono::seconds getMaxDelayTime() const
+    {
+        return maxDelay;
+    }
+
     void addLine(std::chrono::milliseconds lineDelayTime)
     {
+        if(lineDelayTime > maxDelay)
+        {
+            return;
+        }
+
         std::unique_ptr<LineList> newLinesList = std::make_unique<LineList>();
 
         //Copy all lines across from main lines list
-        std::copy(lines.begin(), lines.end(), std::back_inserter(newLinesList));
+        std::copy(lines->begin(), lines->end(), std::back_inserter(*newLinesList));
 
         //Create new line and add to new lines list
         std::shared_ptr<DelayLine<FloatType>> newLine = std::make_shared<DelayLine<FloatType>>(lineDelayTime);
@@ -39,7 +49,7 @@ public:
 
     void removeLine(size_t lineIndex)
     {
-        if(lineIndex >= lines.size())
+        if(lineIndex >= lines->size())
         {
             return;
         }
@@ -47,10 +57,10 @@ public:
         std::unique_ptr<LineList> newLinesList = std::make_unique<LineList>();
 
         //Copy all lines across from main lines list
-        std::copy(lines.begin(), lines.end(), std::back_inserter(newLinesList));
+        std::copy(lines->begin(), lines->end(), std::back_inserter(*newLinesList));
 
         //Remove line to delete from new list
-        newLinesList->erase(lines.begin() + lineIndex);
+        newLinesList->erase(newLinesList->begin() + lineIndex);
 
         //Wait for safe line list pointer to be out of real-time use and replace with the new list
         for(LineList* expected = lines.get(); !safeLines.compare_exchange_strong(expected, newLinesList.get()); expected = lines.get());
@@ -62,19 +72,19 @@ public:
     DelayLine<FloatType>* getLine(size_t lineIndex)
     {
         //We do not have to worry about thread safety here since this thread is the only one which can edit the lines list
-        return lineIndex >= lines.size() ? nullptr : lines[lineIndex];
+        return lineIndex >= lines->size() ? nullptr : (*lines)[lineIndex].get();
     }
 
     const DelayLine<FloatType>* getLine(size_t lineIndex) const
     {
         //We do not have to worry about thread safety here since this thread is the only one which can edit the lines list
-        return lineIndex >= lines.size() ? nullptr : lines[lineIndex];
+        return lineIndex >= lines->size() ? nullptr : (*lines)[lineIndex].get();
     }
 
     size_t numLines() const
     {
         //We do not have to worry about thread safety here since this thread is the only one which can edit the lines list
-        return lines.size();
+        return lines->size();
     }
 
     void prepare(int sampleRate, int bufferSize)

@@ -18,6 +18,11 @@ public:
 
     }
 
+    std::chrono::milliseconds getDelayTime() const
+    {
+        return time;
+    }
+
     //Threadsafe and realtime safe
     void setAmplitude(float newAmplitudeDb)
     {
@@ -45,6 +50,6 @@ private:
 
     std::atomic<float> gain = 1.0f;
 
-    template<typename T>
+    template<std::floating_point>
     friend class Delay;
 };
