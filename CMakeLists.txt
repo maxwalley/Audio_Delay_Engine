@@ -13,6 +13,11 @@ add_executable(
     test.cpp
 )
 
+target_include_directories(
+    audio_delay_engine_test
+    PRIVATE include
+)
+
 target_link_libraries(
     audio_delay_engine_test
     GTest::gtest_main
