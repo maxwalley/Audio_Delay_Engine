@@ -45,5 +45,6 @@ private:
 
     std::atomic<float> gain = 1.0f;
 
+    template<typename T>
     friend class Delay;
 };

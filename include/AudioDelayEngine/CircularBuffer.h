@@ -17,19 +17,20 @@ public:
     void prepare(int sampleRate, int bufferSize)
     {
         buffersize = bufferSize;
-        buffer.resize(maxDelay.count() * sampleRate + buffersize);
+        samplerate = sampleRate;
+        buffer.resize(maxDelay.count() * samplerate + buffersize);
     }
 
-    wrap_around getWriteBuffer()
+    wrap_around<std::vector<FloatType>> getWriteBuffer()
     {
-        auto buffer = wrap_around(buffer, writePos, buffersize);
+        auto wrapper = wrap_around(buffer, writePos, buffersize);
 
         writePos += buffersize;
 
-        return buffer;
+        return wrapper;
     }
 
-    wrap_around getReadBuffer(std::chrono::milliseconds delayLength)
+    wrap_around<std::vector<FloatType>> getReadBuffer(std::chrono::milliseconds delayLength)
     {
         size_t delaySamples = (samplerate / 1000.0) * delayLength.count();
         size_t delayPos;
@@ -49,6 +50,7 @@ public:
 private:
     std::chrono::seconds maxDelay;
     int buffersize;
+    int samplerate;
     std::vector<FloatType> buffer;
     size_t writePos = 0;
 };

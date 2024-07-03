@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <algorithm>
 #include "CircularBuffer.h"
 #include "DelayLine.h"
 
@@ -16,12 +17,12 @@ public:
 
     }
 
-    DelayLine& getLine(size_t lineIndex)
+    DelayLine<FloatType>& getLine(size_t lineIndex)
     {
 
     }
 
-    const DelayLine& getLine(size_t lineIndex) const
+    const DelayLine<FloatType>& getLine(size_t lineIndex) const
     {
 
     }
@@ -35,7 +36,7 @@ public:
     {
         buffer = std::make_unique<CircularBuffer<FloatType>>(sampleRate, bufferSize, maxDelay);
 
-        std::for_each(lines.begin(), lines.end(), [](DelayLine& line)
+        std::for_each(lines.begin(), lines.end(), [this](DelayLine<FloatType>& line)
         {
             line.prepare(buffer.get());
         });
@@ -50,5 +51,5 @@ private:
     std::chrono::seconds maxDelay;
     std::unique_ptr<CircularBuffer<FloatType>> buffer = nullptr;
 
-    std::vector<DelayLine> lines;
+    std::vector<DelayLine<FloatType>> lines;
 };
