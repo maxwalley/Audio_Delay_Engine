@@ -6,7 +6,7 @@ template<std::floating_point FloatType = float>
 class DelayLine
 {
 public:
-    DelayLine(CircularBuffer& buf, std::chrono::milliseconds delayTime)  : buffer(buf), time(delayTime)
+    DelayLine(std::chrono::milliseconds delayTime)  : time(delayTime)
     {
 
     }
@@ -14,11 +14,6 @@ public:
     ~DelayLine()
     {
 
-    }
-
-    void process(std::span<FloatType> data)
-    {
-        
     }
 
     //Threadsafe and realtime safe
@@ -29,8 +24,24 @@ public:
     }
 
 private:
-    CircularBuffer<FloatType>& buffer;
+    //For main Delay class
+    //Not threadsafe with process()
+    void prepare(CircularBuffer<FloatType>* bufferToUse)
+    {
+        buffer = bufferToUse;
+    }
+
+    //For main Delay class
+    void process(std::span<FloatType> data)
+    {
+        
+    }
+
     std::chrono::milliseconds time;
 
+    CircularBuffer<FloatType>* buffer = nullptr;
+
     std::atomic<float> gain = 1.0f;
+
+    friend class Delay;
 };
