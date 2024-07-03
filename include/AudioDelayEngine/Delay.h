@@ -1,3 +1,5 @@
+#pragma once
+
 #include <concepts>
 #include "CircularBuffer.h"
 #include "DelayLine.h"
@@ -21,7 +23,7 @@ public:
 
     const DelayLine& getLine(size_t lineIndex) const
     {
-        
+
     }
 
     size_t numLines() const
