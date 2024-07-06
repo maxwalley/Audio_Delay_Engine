@@ -6,12 +6,12 @@ using namespace std::chrono_literals;
 TEST(DelayEngineTests, VerifyMaxDelayTime)
 {
     //Test that max delay time is as set
-    std::chrono::seconds firstMaxDelayTime = 30s;
+    constexpr std::chrono::seconds firstMaxDelayTime = 30s;
     Delay firstDelay(firstMaxDelayTime);
     
     EXPECT_EQ(firstDelay.getMaxDelayTime(), firstMaxDelayTime);
 
-    std::chrono::seconds secondMaxDelayTime = 500s;
+    constexpr std::chrono::seconds secondMaxDelayTime = 500s;
     Delay secondDelay(secondMaxDelayTime);
 
     EXPECT_EQ(secondDelay.getMaxDelayTime(), secondMaxDelayTime);
@@ -106,7 +106,7 @@ TEST(DelayEngineTests, RetrieveNonExistantLine)
 TEST(DelayEngineTests, VerifyLineDelayTime)
 {
     //Test adding a line and that the delay time is consistent
-    const std::chrono::milliseconds delayTime = 10ms;
+    constexpr std::chrono::milliseconds delayTime = 10ms;
     
     Delay delay(1s);
     delay.addLine(delayTime);
@@ -116,4 +116,60 @@ TEST(DelayEngineTests, VerifyLineDelayTime)
     ASSERT_NE(line, nullptr);
 
     ASSERT_EQ(line->getDelayTime(), delayTime);
+}
+
+TEST(DelayEngineTests, ImpuseTestSingleBuffer)
+{
+    constexpr int sampleRate = 44100;
+    constexpr int bufferSize = 512;
+    std::vector<float> buffer(bufferSize);
+    constexpr float sampleVal = 1.0f;
+    buffer[0] = sampleVal;
+
+    constexpr std::chrono::milliseconds delayTime(10);
+    constexpr int delayTimeSamples = sampleRate / 1000 * delayTime.count();
+    ASSERT_TRUE(delayTimeSamples < bufferSize);
+
+    Delay delay(1s);
+    delay.addLine(delayTime);
+    delay.prepare(sampleRate, bufferSize);
+    delay.process({buffer.data(), buffer.size()});
+
+    for(int sampleIndex = 0; sampleIndex < bufferSize; ++sampleIndex)
+    {
+        const float expectedSampleVal = sampleIndex == delayTimeSamples ? sampleVal : 0.0f;
+        EXPECT_EQ(buffer[sampleIndex], expectedSampleVal);
+    }
+}
+
+TEST(DelayEngineTests, ImpuseTestMultiBuffer)
+{
+    constexpr int sampleRate = 44100;
+    constexpr int bufferSize = 512;
+    std::vector<float> buffer(bufferSize);
+    constexpr float sampleVal = 1.0f;
+    buffer[0] = sampleVal;
+
+    constexpr std::chrono::milliseconds delayTime(1000);
+    constexpr int delayTimeSamples = sampleRate / 1000 * delayTime.count();
+    ASSERT_TRUE(delayTimeSamples > bufferSize);
+
+    Delay delay(2s);
+    delay.addLine(delayTime);
+    delay.prepare(sampleRate, bufferSize);
+    delay.process({buffer.data(), buffer.size()});
+
+    for(int bufferIndex = 0; bufferIndex < sampleRate / bufferSize + 2; ++bufferIndex)
+    {
+        for(size_t sampleIndex = 0; sampleIndex < bufferSize; ++sampleIndex)
+        {
+            size_t overallSampleIndex = bufferIndex * bufferSize + sampleIndex;
+
+            const float expectedSampleVal = overallSampleIndex == delayTimeSamples ? sampleVal : 0.0f;
+            EXPECT_EQ(buffer[sampleIndex], expectedSampleVal);
+        }
+
+        std::fill(buffer.begin(), buffer.end(), 0.0f);
+        delay.process({buffer.data(), buffer.size()});
+    }
 }
