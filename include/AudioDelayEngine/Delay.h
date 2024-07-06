@@ -10,7 +10,7 @@ template<std::floating_point FloatType = float>
 class Delay
 {
 public:
-    Delay(std::chrono::seconds maxDelayTime)  : maxDelay(maxDelayTime) 
+    Delay(std::chrono::seconds maxDelayTime)  : maxDelay(maxDelayTime), buffer(maxDelay)
     {
         lines = std::make_unique<LineList>();
         safeLines = lines.get();
@@ -36,7 +36,7 @@ public:
         std::copy(lines->begin(), lines->end(), std::back_inserter(*newLinesList));
 
         //Create new line and add to new lines list
-        std::shared_ptr<DelayLine<FloatType>> newLine = std::make_shared<DelayLine<FloatType>>(lineDelayTime);
+        std::shared_ptr<DelayLine<FloatType>> newLine = std::make_shared<DelayLine<FloatType>>(lineDelayTime, buffer);
 
         newLinesList->push_back(newLine);
 
@@ -89,12 +89,7 @@ public:
 
     void prepare(int sampleRate, int bufferSize)
     {
-        buffer = std::make_unique<CircularBuffer<FloatType>>(sampleRate, bufferSize, maxDelay);
-
-        std::for_each(lines.begin(), lines.end(), [this](DelayLine<FloatType>& line)
-        {
-            line.prepare(buffer.get());
-        });
+        buffer.prepare(sampleRate, bufferSize);
     }
 
     void process(std::span<FloatType> data)
@@ -115,7 +110,7 @@ public:
 
 private:
     std::chrono::seconds maxDelay;
-    std::unique_ptr<CircularBuffer<FloatType>> buffer = nullptr;
+    CircularBuffer<FloatType> buffer;
 
     using LineList = std::vector<std::shared_ptr<DelayLine<FloatType>>>;
     std::unique_ptr<LineList> lines;
