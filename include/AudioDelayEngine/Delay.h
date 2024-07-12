@@ -91,13 +91,13 @@ public:
     {
         buffer.prepare(sampleRate, bufferSize);
 
-        readBuffer.resize(bufferSize);
+        buffersize = bufferSize;
     }
 
     void process(std::span<FloatType> data)
     {
         //Wrong buffer size set in prepare
-        if(data.size() != readBuffer.size())
+        if(buffersize != data.size())
         {
             assert(false);
             return;
@@ -146,5 +146,5 @@ private:
     std::unique_ptr<LineList> lines;
     std::atomic<LineList*> safeLines;
 
-    std::vector<FloatType> readBuffer;
+    int buffersize;
 };
