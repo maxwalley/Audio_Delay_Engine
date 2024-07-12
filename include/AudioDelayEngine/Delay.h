@@ -90,10 +90,19 @@ public:
     void prepare(int sampleRate, int bufferSize)
     {
         buffer.prepare(sampleRate, bufferSize);
+
+        readBuffer.resize(bufferSize);
     }
 
     void process(std::span<FloatType> data)
     {
+        //Wrong buffer size set in prepare
+        if(data.size() != readBuffer.size())
+        {
+            assert(false);
+            return;
+        }
+
         //CAS loop failed
         if(safeLines == nullptr)
         {
@@ -101,8 +110,29 @@ public:
             return;
         }
 
+        //Add new data to circular buffer
+        wrap_around writeBuffer = buffer.getWriteBuffer();
+
+        std::copy(data.begin(), data.end(), writeBuffer.begin());
+
+        std::fill(data.begin(), data.end(), FloatType(0.0));
+
         //Mark that lines are now in use by real-time thread
         LineList* realtimeLines = safeLines.exchange(nullptr);
+
+        //Process all delay lines and store in read buffer
+        std::for_each(realtimeLines->begin(), realtimeLines->end(), [&data](std::shared_ptr<DelayLine<FloatType>>& line)
+        {   
+            line->process(data);
+        });
+
+        buffer.markBuffer();
+
+        /*if(writeBuffer.size() != data.size())
+        {
+            assert(false);
+            return;
+        }*/
 
         //Mark that lines are now safe to edit
         safeLines = realtimeLines;
@@ -115,4 +145,6 @@ private:
     using LineList = std::vector<std::shared_ptr<DelayLine<FloatType>>>;
     std::unique_ptr<LineList> lines;
     std::atomic<LineList*> safeLines;
+
+    std::vector<FloatType> readBuffer;
 };
