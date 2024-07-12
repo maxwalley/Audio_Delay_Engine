@@ -37,13 +37,13 @@ public:
         size_t delayPos;
 
         //Check whether it needs to loop back round
-        if(buffersize > writePos || delaySamples > (writePos - buffersize))
+        if(delaySamples > writePos)
         {
-            delayPos = buffer.size() - delaySamples - writePos;
+            delayPos = buffer.size() - delaySamples + writePos;
         }
         else
         {
-            delayPos = writePos - buffersize - delaySamples;
+            delayPos = writePos - delaySamples;
         }
 
         return wrap_around(buffer, delayPos, buffersize);
