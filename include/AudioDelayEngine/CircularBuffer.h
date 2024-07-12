@@ -23,19 +23,21 @@ public:
 
     wrap_around<std::vector<FloatType>> getWriteBuffer()
     {
-        auto wrapper = wrap_around(buffer, writePos, buffersize);
-
-        writePos += buffersize;
-
-        return wrapper;
+        return wrap_around(buffer, writePos, buffersize);
     }
 
     wrap_around<std::vector<FloatType>> getReadBuffer(std::chrono::milliseconds delayLength)
     {
+        if(delayLength > maxDelay)
+        {
+            assert(false);
+        }
+
         size_t delaySamples = (samplerate / 1000.0) * delayLength.count();
         size_t delayPos;
 
-        if(writePos - buffersize - delaySamples < 0)
+        //Check whether it needs to loop back round
+        if(buffersize > writePos || delaySamples > (writePos - buffersize))
         {
             delayPos = buffer.size() - delaySamples - writePos;
         }
@@ -45,6 +47,16 @@ public:
         }
 
         return wrap_around(buffer, delayPos, buffersize);
+    }
+
+    void markBuffer()
+    {
+        writePos += buffersize;
+
+        if(writePos >= buffer.size())
+        {
+            writePos -= buffer.size();
+        }
     }
 
 private:
