@@ -36,12 +36,6 @@ private:
     {
         wrap_around view = buffer.getReadBuffer(time);
 
-        /*if(data.size() != view.size())
-        {
-            assert(false);
-            return;
-        }*/
-
         std::transform(data.begin(), data.end(), view.begin(), data.begin(), [this](FloatType first, FloatType second)
         {
             return first + second * gain;
