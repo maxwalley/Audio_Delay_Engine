@@ -118,7 +118,7 @@ TEST(DelayEngineTests, VerifyLineDelayTime)
     ASSERT_EQ(line->getDelayTime(), delayTime);
 }
 
-TEST(DelayEngineTests, ImpuseTestSingleBuffer)
+TEST(DelayEngineTests, ImpulseTestSingleBuffer)
 {
     constexpr int sampleRate = 44100;
     constexpr int bufferSize = 512;
@@ -142,7 +142,7 @@ TEST(DelayEngineTests, ImpuseTestSingleBuffer)
     }
 }
 
-TEST(DelayEngineTests, ImpuseTestMultiBuffer)
+TEST(DelayEngineTests, ImpulseTestMultiBuffer)
 {
     constexpr int sampleRate = 44100;
     constexpr int bufferSize = 512;
@@ -166,6 +166,42 @@ TEST(DelayEngineTests, ImpuseTestMultiBuffer)
             size_t overallSampleIndex = bufferIndex * bufferSize + sampleIndex;
 
             const float expectedSampleVal = overallSampleIndex == delayTimeSamples ? sampleVal : 0.0f;
+            EXPECT_EQ(buffer[sampleIndex], expectedSampleVal);
+        }
+
+        std::fill(buffer.begin(), buffer.end(), 0.0f);
+        delay.process({buffer.data(), buffer.size()});
+    }
+}
+
+TEST(DelayEngineTests, ImpulseTestMultiLine)
+{
+    constexpr int sampleRate = 44100;
+    constexpr int bufferSize = 512;
+    std::vector<float> buffer(bufferSize);
+    constexpr float sampleVal = 1.0f;
+    buffer[0] = sampleVal;
+
+    constexpr std::chrono::milliseconds lineOneDelayTime(50);
+    constexpr int lineOneDelayTimeSamples = (sampleRate / 1000.0) * lineOneDelayTime.count();
+
+    constexpr std::chrono::milliseconds lineTwoDelayTime(120);
+    constexpr int lineTwoDelayTimeSamples = (sampleRate / 1000.0) * lineTwoDelayTime.count();
+
+    Delay delay(1s);
+    delay.addLine(lineOneDelayTime);
+    delay.addLine(lineTwoDelayTime);
+    delay.prepare(sampleRate, bufferSize);
+    delay.process({buffer.data(), buffer.size()});
+
+
+    for(int bufferIndex = 0; bufferIndex < sampleRate / bufferSize + 2; ++bufferIndex)
+    {
+        for(size_t sampleIndex = 0; sampleIndex < bufferSize; ++sampleIndex)
+        {
+            size_t overallSampleIndex = bufferIndex * bufferSize + sampleIndex;
+
+            const float expectedSampleVal = (overallSampleIndex == lineOneDelayTimeSamples || overallSampleIndex == lineTwoDelayTimeSamples) ? sampleVal : 0.0f;
             EXPECT_EQ(buffer[sampleIndex], expectedSampleVal);
         }
 
