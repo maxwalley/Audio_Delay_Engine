@@ -127,7 +127,7 @@ TEST(DelayEngineTests, ImpuseTestSingleBuffer)
     buffer[0] = sampleVal;
 
     constexpr std::chrono::milliseconds delayTime(10);
-    constexpr int delayTimeSamples = sampleRate / 1000 * delayTime.count();
+    constexpr int delayTimeSamples = (sampleRate / 1000.0) * delayTime.count();
     ASSERT_TRUE(delayTimeSamples < bufferSize);
 
     Delay delay(1s);
@@ -151,7 +151,7 @@ TEST(DelayEngineTests, ImpuseTestMultiBuffer)
     buffer[0] = sampleVal;
 
     constexpr std::chrono::milliseconds delayTime(1000);
-    constexpr int delayTimeSamples = sampleRate / 1000 * delayTime.count();
+    constexpr int delayTimeSamples = (sampleRate / 1000.0) * delayTime.count();
     ASSERT_TRUE(delayTimeSamples > bufferSize);
 
     Delay delay(2s);
