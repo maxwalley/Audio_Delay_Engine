@@ -128,12 +128,6 @@ public:
 
         buffer.markBuffer();
 
-        /*if(writeBuffer.size() != data.size())
-        {
-            assert(false);
-            return;
-        }*/
-
         //Mark that lines are now safe to edit
         safeLines = realtimeLines;
     }
