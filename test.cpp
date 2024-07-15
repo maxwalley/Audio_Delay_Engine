@@ -230,5 +230,80 @@ TEST(DelayEngineTests, ImpulseTestZeroDelay)
     }
 }
 
+TEST(DelayEngineTests, GainSetTest)
+{
+    Delay delay(2s);
+    delay.addLine(0ms);
+
+    DelayLine<>* line = delay.getLine(0);
+    ASSERT_NE(line, nullptr);
+
+    constexpr double posGainDb = 6.0;
+    line->setGain(posGainDb);
+    EXPECT_EQ(line->getGain(), posGainDb);
+
+    constexpr double negGainDb = -6.0;
+    line->setGain(negGainDb);
+    EXPECT_EQ(line->getGain(), negGainDb);
+}
+
+TEST(DelayEngineTests, GainTest)
+{
+    constexpr int sampleRate = 44100;
+    constexpr int bufferSize = 512;
+    std::vector<float> buffer(bufferSize);
+    constexpr float sampleVal = 1.0f;
+    buffer[0] = sampleVal;
+
+    Delay delay(1s);
+    delay.addLine(0ms);
+    delay.prepare(sampleRate, bufferSize);
+
+    DelayLine<>* line = delay.getLine(0);
+    ASSERT_NE(line, nullptr);
+
+    constexpr double posGainDb = 6.0;
+    constexpr double posGain = 2.0;
+    constexpr double gainThreshold = 0.01;
+    line->setGain(posGainDb);
+    EXPECT_EQ(line->getGain(), posGainDb);
+
+    delay.process({buffer.data(), buffer.size()});
+
+    for(size_t sampleIndex = 0; sampleIndex < buffer.size(); ++sampleIndex)
+    {
+        if(sampleIndex == 0)
+        {
+            EXPECT_LT(posGain - gainThreshold, buffer[sampleIndex]);
+            EXPECT_GT(posGain + gainThreshold, buffer[sampleIndex]);
+        }
+        else
+        {
+            EXPECT_EQ(0.0f, buffer[sampleIndex]);
+        }
+    }
+
+    buffer[0] = 1.0f;
+
+    constexpr double negGainDb = -6.0;
+    constexpr double negGain = 0.5;
+    line->setGain(negGainDb);
+    EXPECT_EQ(line->getGain(), negGainDb);
+
+    delay.process({buffer.data(), buffer.size()});
+
+    for(size_t sampleIndex = 0; sampleIndex < buffer.size(); ++sampleIndex)
+    {
+        if(sampleIndex == 0)
+        {
+            EXPECT_LT(negGain - gainThreshold, buffer[sampleIndex]);
+            EXPECT_GT(negGain + gainThreshold, buffer[sampleIndex]);
+        }
+        else
+        {
+            EXPECT_EQ(0.0f, buffer[sampleIndex]);
+        }
+    }
+}
+
 //RECIRCULATION TESTS
-//GAIN TESTS ON DELAY LINES
