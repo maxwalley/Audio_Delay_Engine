@@ -209,3 +209,26 @@ TEST(DelayEngineTests, ImpulseTestMultiLine)
         delay.process({buffer.data(), buffer.size()});
     }
 }
+
+TEST(DelayEngineTests, ImpulseTestZeroDelay)
+{
+    constexpr int sampleRate = 44100;
+    constexpr int bufferSize = 512;
+    std::vector<float> buffer(bufferSize);
+    constexpr float sampleVal = 1.0f;
+    buffer[0] = sampleVal;
+
+    Delay delay(1s);
+    delay.addLine(0ms);
+    delay.prepare(sampleRate, bufferSize);
+    delay.process({buffer.data(), buffer.size()});
+
+    for(size_t sampleIndex = 0; sampleIndex < buffer.size(); ++sampleIndex)
+    {
+        const float expectedSampleVal = sampleIndex == 0 ? sampleVal : 0.0f;
+        EXPECT_EQ(buffer[sampleIndex], expectedSampleVal);
+    }
+}
+
+//RECIRCULATION TESTS
+//GAIN TESTS ON DELAY LINES
